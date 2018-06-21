@@ -30,38 +30,29 @@ import UIKit
 
 class CreateCategoryTableViewController: UITableViewController {
 
-  // MARK: - IBOutlets
   @IBOutlet weak var nameTextField: UITextField!
 
-  // MARK: - View Life Cycle
   override func viewDidLoad() {
     super.viewDidLoad()
     nameTextField.becomeFirstResponder()
   }
 
-  // MARK: - IBActions
   @IBAction func cancel(_ sender: Any) {
     navigationController?.popViewController(animated: true)
   }
 
   @IBAction func save(_ sender: Any) {
-    // 1
-    guard
-      let name = nameTextField.text, !name.isEmpty else {
+    guard let name = nameTextField.text,
+      !name.isEmpty else {
         ErrorPresenter.showError(message: "You must specify a name", on: self)
         return
     }
-    
-    // 2
+
     let category = Category(name: name)
-    // 3
     ResourceRequest<Category>(resourcePath: "categories").save(category) { [weak self] result in
       switch result {
-      // 5
       case .failure:
-        let message = "There was a problem saving the category"
-        ErrorPresenter.showError(message: message, on: self)
-      // 6
+        ErrorPresenter.showError(message: "There was a problem saving the category", on: self)
       case .success:
         DispatchQueue.main.async { [weak self] in
           self?.navigationController?.popViewController(animated: true)

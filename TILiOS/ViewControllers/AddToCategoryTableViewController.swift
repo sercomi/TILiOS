@@ -30,28 +30,23 @@ import UIKit
 
 class AddToCategoryTableViewController: UITableViewController {
 
-  // MARK: - Properties
   var categories: [Category] = []
   var selectedCategories: [Category]!
   var acronym: Acronym!
 
-  // MARK: - View Life Cycle
   override func viewDidLoad() {
     super.viewDidLoad()
     loadData()
   }
 
   func loadData() {
-    // 1
     let categoriesRequest = ResourceRequest<Category>(resourcePath: "categories")
-    // 2
     categoriesRequest.getAll { [weak self] result in
       switch result {
-      // 3
       case .failure:
-        let message = "There was an error getting the categories"
-        ErrorPresenter.showError(message: message, on: self)
-      // 4
+        ErrorPresenter.showError(message: "There was an error getting the categories", on: self) { _ in
+          self?.navigationController?.popViewController(animated: true)
+        }
       case .success(let categories):
         self?.categories = categories
         DispatchQueue.main.async { [weak self] in
@@ -70,55 +65,40 @@ extension AddToCategoryTableViewController {
   }
 
   override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let category = categories[indexPath.row]
-
     let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
+    let category =  categories[indexPath.row]
     cell.textLabel?.text = category.name
-
     let isSelected = selectedCategories.contains { element in
       element.name == category.name
     }
-
     if isSelected {
       cell.accessoryType = .checkmark
     }
-
     return cell
   }
-}
 
-// MARK: - UITableViewDelegate
-extension AddToCategoryTableViewController {
   override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-    // 1
     let category = categories[indexPath.row]
-    // 2
     guard let acronymID = acronym.id else {
       let message = """
-        There was an error adding the acronym
-        to the category - the acronym has no ID
-        """
+      There was an error adding the acronym
+      to the category - the acronym has no ID
+      """
       ErrorPresenter.showError(message: message, on: self)
       return
     }
-    // 3
     let acronymRequest = AcronymRequest(acronymID: acronymID)
-    acronymRequest.add(category: category) {
-      [weak self] result in
-      
+    acronymRequest.add(category: category) { [weak self] result in
       switch result {
-      // 4
       case .success:
         DispatchQueue.main.async { [weak self] in
-          self?.navigationController?
-            .popViewController(animated: true)
+          self?.navigationController?.popViewController(animated: true)
         }
-      // 5
       case .failure:
         let message = """
-          There was an error adding the acronym
-          to the category
-          """
+        There was an error adding the acronym
+        to the category
+        """
         ErrorPresenter.showError(message: message, on: self)
       }
     }

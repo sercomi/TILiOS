@@ -28,16 +28,36 @@
 
 import UIKit
 
-class ErrorPresenter {
+class LoginTableViewController: UITableViewController {
 
-  static func showError(message: String, on viewController: UIViewController?, dismissAction: ((UIAlertAction) -> Void)? = nil) {
-    weak var vc = viewController
-    DispatchQueue.main.async {
-      let alert = UIAlertController(title: "Error",
-                                    message: message,
-                                    preferredStyle: .alert)
-      alert.addAction(UIAlertAction(title: "Dismiss", style: .default, handler: dismissAction))
-      vc?.present(alert, animated: true)
+  // MARK: - Properties
+
+  @IBOutlet weak var usernameTextField: UITextField!
+  @IBOutlet weak var passwordTextField: UITextField!
+
+  @IBAction func loginTapped(_ sender: UIBarButtonItem) {
+    guard let username = usernameTextField.text, !username.isEmpty else {
+      ErrorPresenter.showError(message: "Please enter your username", on: self)
+      return
+    }
+
+    guard let password = passwordTextField.text, !password.isEmpty else {
+      ErrorPresenter.showError(message: "Please enter your password", on: self)
+      return
+    }
+    
+    Auth().login(username: username, password: password) { result in
+      switch result {
+      case .success:
+        DispatchQueue.main.async {
+          let appDelegate = UIApplication.shared.delegate as? AppDelegate
+
+          appDelegate?.window?.rootViewController = UIStoryboard(name: "Main", bundle: Bundle.main).instantiateInitialViewController()
+      }
+      case .failure:
+      let message = "Could not login. Check your credentials and try again"
+      ErrorPresenter.showError(message: message, on: self)
+      }
     }
   }
 }
